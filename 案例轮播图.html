@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <style type="text/css">
+    * {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      border: 0;
+    }
+
+    .all {
+      width: 500px;
+      height: 200px;
+      padding: 7px;
+      border: 1px solid #ccc;
+      margin: 100px auto;
+      position: relative;
+    }
+
+    .screen {
+      width: 500px;
+      height: 200px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen ul {
+      position: absolute;
+      left: 0;
+      top: 0px;
+      width: 3000px;
+    }
+
+    .screen li {
+      width: 500px;
+      height: 200px;
+      overflow: hidden;
+      float: left;
+    }
+
+
+
+    .all ol {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      line-height: 20px;
+      text-align: center;
+    }
+
+    .all ol li {
+      float: left;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+
+    .all ol li.current {
+      background: #DB192A;
+    }
+
+    #arr {
+      display: none;
+    }
+
+    /* #arr span {
+      width: 40px;
+      height: 40px;
+      position: absolute;
+      left: 5px;
+      top: 50%;
+      margin-top: -20px;
+	  
+      background: #000;
+      cursor: pointer;
+      line-height: 40px;
+      text-align: center;
+      font-weight: bold;
+      font-family: '黑体';
+      font-size: 30px;
+      color: #fff;
+      opacity: 0.3;
+      border: 1px solid #fff;
+    } */
+	#arr span {
+		position: absolute;
+		top: 50%;
+		margin-top: -20px;
+		height: 40px;
+		width: 40px;
+		
+		background-color: #000000;
+		opacity: 0.3;
+		
+		color: #fff;
+		font-size: 30px;
+		line-height: 37px;
+		font-weight: bold;
+		text-align: center;
+		border: 1px solid #fff;
+		
+		cursor: pointer;
+	}
+
+    #arr #right {
+      right: 5px;
+      /* left: auto; */ 
+    }
+  </style>
+</head>
+<body>
+<div class="all" id='box'>
+  <div class="screen"><!--相框-->
+    <ul>
+      <li><img src="images/1.jpg" width="500" height="200"/></li>
+      <li><img src="images/2.jpg" width="500" height="200"/></li>
+      <li><img src="images/3.jpg" width="500" height="200"/></li>
+      <li><img src="images/4.jpg" width="500" height="200"/></li>
+      <li><img src="images/5.jpg" width="500" height="200"/></li>
+    </ul>
+    <ol>
+    </ol>
+  </div>
+  <div id="arr"><span id="left">&lt;</span><span id="right">&gt;</span></div>
+</div>
+<script src="common.js"></script>
+<script>
+	// 第一遍：总结
+	// 1.逻辑要清晰，最好写代码之前，有思路
+	// 2.操作的什么dom一定要清晰 比如 ol 和 ul 的区别
+	// 3.元素的操作要熟练 ： 比如： removeAttribute（class) 
+	// 4.细心注意细节
+	
+	//写代码最好，从逻辑开始
+	//先总结出东西怎么写
+	
+	// 完成轮播图注意：
+	//1.根据图片个数，生成<ol>
+	//2.right里得无缝连接
+	//3.left里面的无缝连接
+	//4.通过setinterval来控制自动轮播
+	//5.通过animate来生成动画
+	
+	//具体：
+	/*
+	Tag
+	1.get图片个数
+	2.通过for循环生成li
+	2.为li，innerHTML设置内容
+	3.设置index，内容为li
+	
+	Tag:onmouseover
+	1.通过for循环设置ol,li:className为current
+	2.其他为空
+	3.通过下标数控制移动,整个图片元素
+	设置全局pic为，后面做好准备
+	pic等于index的下标；
+	4.animte(ul,- pic*width): 整个ul在往左所以是负数
+	
+	>:onmouseover 
+	1.外部设置移动函数的间隙调用
+	2.正常调用
+	3.标签display：block
+	<:onmouseout
+	1.display：none
+	2.清楚计时器
+	
+	
+	left:>:click：调用移动函数
+	移动函数：无缝连接，
+	1.当pic值为5的时候
+	pic = 0； 
+	animte()到0的位置
+	2.!!!注意：此时无法达到无缝效果，需要克隆节点
+	cloneNode(ture)
+	
+	3.p++
+	正常animte
+	
+	4.ol跟随变化
+	当pic=5
+	ol的0位current
+	其他为"" 
+	
+	其他情况正常处理：
+	pic为current，其他为空
+	
+	right:click
+	
+	right:>:click：调用移动函数
+	1.当pic= 0
+	pic = 5
+	移动到5的位置
+	
+	2。正常
+	pic--
+	animte
+	
+	2.ol跟随变化
+	1.清楚所有class
+	2.设置pic为current
+	
+	*/
+
+	
+	//整个盒子
+	var box = my$("box");
+	//可视相框
+	var screen = box.children[0]
+	//移动的ul
+	var ulObj = screen.children[0];
+	// 相框宽度，用来传入动画函数
+	var imgWidth = screen.offsetWidth;
+	//olObj:Tag指示， list：olObj的子图片
+	var olObj = screen.children[1];
+	
+	var list = ulObj.children 
+	ulObj.children
+	
+	//<>
+	var arr = my$("arr")
+	//当前所在图片下标全局变量
+	var pic = 0;
+	
+	//注册按钮，当悬浮的时候移动到指定位置
+	for(var i = 0; i< list.length; i++) {
+		//创建list.length，并添加内容
+		var liObj = document.createElement("li");
+		olObj.append(liObj);
+		liObj.innerHTML = (i+1)
+		
+		//设置下标
+		liObj.setAttribute("index", i)
+		
+		//注册时间：清楚所有current, 然后加上current
+		//开始默认附加current到第一个
+		olObj.children[0].className = "current";
+		liObj.onmouseover = function() {
+			for(var j = 0; j < olObj.children.length; j++) {
+				olObj.children[j].removeAttribute("class")	
+			}
+			this.className = "current"
+			
+			//获取下标，移动到指定的位置
+			var pic = this.getAttribute("index")
+			animate(ulObj, -pic * imgWidth)
+		}
+		
+		
+	}
+	ulObj.appendChild(ulObj.children[0].cloneNode(true))
+	
+	//注册左右点击控制，（包括无缝的实现)
+	//鼠标进入现实<>,并停止自动播放、离开的时候，播放
+	timeId= setInterval(clickHandle,1000);
+	
+	box.onmouseover = function() {
+		arr.style.display = "block";
+		clearInterval(timeId)
+	}
+	box.onmouseout = function() {
+		arr.style.display = "none";
+		timeId = setInterval(clickHandle, 1000)
+	}
+	
+	//右击>,实现播放
+	my$("right").onclick = clickHandle;
+	//无缝轮播：
+	//当pic = 5的时候，跳到0，
+	console.log(list) 
+	console.log(ulObj)
+	function clickHandle() {
+
+		if(pic == list.length -1) {
+			pic = 0;
+			ulObj.style.left = 0 + "px";
+		}
+		pic++;
+		animate(ulObj, - pic*imgWidth)
+		
+		if(pic == list.length - 1) {
+			// var id2 = list.length - 1
+			var id = olObj.children.length - 1
+			olObj.children[id].className = "";
+			olObj.children[0].className = "current";
+		}else {
+			for(var j = 0; j < olObj.children.length; j++) {
+				olObj.children[j].removeAttribute("class")	
+			}
+			olObj.children[pic].className = "current"
+		}
+		
+	}
+	
+	//点击< 
+	my$("left").onclick = function() {
+		if(pic == 0) {
+			pic = 5;//第六章
+			ulObj.style.left = -pic * imgWidth  + "px";
+		}
+		pic--;
+		animate(ulObj,- pic*imgWidth)
+		for(var i = 0; i< olObj.children.length; i++) {
+			olObj.children[i].removeAttribute("class")
+		}
+		olObj.children[pic].className = "current"
+	}
+	
+	//设置任意的一个元素,移动到指定的目标位置
+	function animate(element, target) {
+	  clearInterval(element.timeId);
+	  //定时器的id值存储到对象的一个属性中
+	  element.timeId = setInterval(function () {
+	    //获取元素的当前的位置,数字类型
+	    var current = element.offsetLeft;
+	    //每次移动的距离
+	    var step = 10;
+	    step = current < target ? step : -step;
+	    //当前移动到位置
+	    current += step;
+	    if (Math.abs(current - target) > Math.abs(step)) {
+	      element.style.left = current + "px";
+	    } else {
+	      //清理定时器
+	      clearInterval(element.timeId);
+	      //直接到达目标
+	      element.style.left = target + "px";
+	    }
+	  }, 10);
+	}
+	
+</script>
+
+
+<script>
+
+
+  //  var num=0;
+  //  function f1(){
+  //
+  //    num=1000;
+  //  }
+  //  f1();
+  //  console.log(num);
+</script>
+</body>
+</html>
